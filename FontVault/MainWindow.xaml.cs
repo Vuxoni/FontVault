@@ -23,6 +23,7 @@ namespace FontVault
         public MainWindow()
         {
             InitializeComponent();
+            Title = "FontVault";
 
             SystemBackdrop = new Microsoft.UI.Xaml.Media.MicaBackdrop();
 
