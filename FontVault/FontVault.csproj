@@ -1,91 +1,81 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
 
-    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
-    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+		<TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+		<TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
 
-    <RootNamespace>FontVault</RootNamespace>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
+		<RootNamespace>FontVault</RootNamespace>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
 
-    <Platforms>x86;x64;ARM64</Platforms>
-    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+		<Platforms>x86;x64;ARM64</Platforms>
+		<RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
 
-    <UseWinUI>true</UseWinUI>
-    <WinUISDKReferences>false</WinUISDKReferences>
-    <Nullable>enable</Nullable>
+		<UseWinUI>true</UseWinUI>
+		<WinUISDKReferences>false</WinUISDKReferences>
+		<Nullable>enable</Nullable>
 
-    <!-- Unpackaged WinUI application -->
-    <WindowsPackageType>None</WindowsPackageType>
+		<!-- Enable single-project MSIX packaging -->
+		<EnableMsixTooling>true</EnableMsixTooling>
 
-    <!-- Include the Windows App SDK and .NET runtime -->
-    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
-    <SelfContained>true</SelfContained>
+		<!-- Include Windows App SDK dependencies inside the MSIX -->
+		<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
 
-    <!-- Default publish target -->
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		<!-- Avoid Release-only behavior differences -->
+		<PublishTrimmed>false</PublishTrimmed>
+		<PublishReadyToRun>false</PublishReadyToRun>
 
-    <!-- Keep dependencies as separate files -->
-    <PublishSingleFile>false</PublishSingleFile>
+		<!-- Package version -->
+		<ApplicationVersion>1.0.0.0</ApplicationVersion>
+		<GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+		<PackageCertificateThumbprint>0B483C8E643F0B179721F42908C422D3D5661E17</PackageCertificateThumbprint>
+		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
+		<AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+		<AppxPackageDir>C:\Users\nvuko\OneDrive\Desktop\FontVault Publish\</AppxPackageDir>
+		<GenerateTestArtifacts>False</GenerateTestArtifacts>
+		<AppxBundle>Never</AppxBundle>
+		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
+	</PropertyGroup>
 
-    <!-- Prevent publish-only runtime problems -->
-    <PublishTrimmed>false</PublishTrimmed>
-    <PublishReadyToRun>false</PublishReadyToRun>
+	<ItemGroup>
+		<Content Include="Assets\SplashScreen.scale-200.png" />
+		<Content Include="Assets\LockScreenLogo.scale-200.png" />
+		<Content Include="Assets\Square150x150Logo.scale-200.png" />
+		<Content Include="Assets\Square44x44Logo.scale-200.png" />
+		<Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
+		<Content Include="Assets\StoreLogo.png" />
+		<Content Include="Assets\Wide310x150Logo.scale-200.png" />
+	</ItemGroup>
 
-    <!-- Keep Visual Studio publishing tools available -->
-    <EnableMsixTooling>true</EnableMsixTooling>
-  </PropertyGroup>
+	<ItemGroup>
+		<Manifest Include="$(ApplicationManifest)" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Content Include="Assets\SplashScreen.scale-200.png" />
-    <Content Include="Assets\LockScreenLogo.scale-200.png" />
-    <Content Include="Assets\Square150x150Logo.scale-200.png" />
-    <Content Include="Assets\Square44x44Logo.scale-200.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
-    <Content Include="Assets\StoreLogo.png" />
-    <Content Include="Assets\Wide310x150Logo.scale-200.png" />
-  </ItemGroup>
+	<ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)' != 'true'&#xD;&#xA;    and '$(EnableMsixTooling)' == 'true'">
 
-  <ItemGroup>
-    <Manifest Include="$(ApplicationManifest)" />
-  </ItemGroup>
+		<ProjectCapability Include="Msix" />
+	</ItemGroup>
 
-  <ItemGroup
-    Condition="'$(DisableMsixProjectCapabilityAddedByProject)' != 'true'
-    and '$(EnableMsixTooling)' == 'true'">
+	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
 
-    <ProjectCapability Include="Msix" />
-  </ItemGroup>
+		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2270" />
 
-  <ItemGroup>
-    <PackageReference
-      Include="CommunityToolkit.Mvvm"
-      Version="8.4.2" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="2.3.1" />
 
-    <PackageReference
-      Include="Microsoft.Windows.SDK.BuildTools"
-      Version="10.0.28000.2270" />
+		<PackageReference Include="System.Drawing.Common" Version="10.0.10" />
+	</ItemGroup>
 
-    <PackageReference
-      Include="Microsoft.WindowsAppSDK"
-      Version="2.3.1" />
+	<ItemGroup>
+		<Folder Include="Helpers\" />
+		<Folder Include="Views\" />
+	</ItemGroup>
 
-    <PackageReference
-      Include="System.Drawing.Common"
-      Version="10.0.10" />
-  </ItemGroup>
+	<PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)' != 'true'&#xD;&#xA;    and '$(EnableMsixTooling)' == 'true'">
 
-  <ItemGroup>
-    <Folder Include="Helpers\" />
-    <Folder Include="Views\" />
-  </ItemGroup>
-
-  <PropertyGroup
-    Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)' != 'true'
-    and '$(EnableMsixTooling)' == 'true'">
-
-    <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
-  </PropertyGroup>
+		<HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
+	</PropertyGroup>
 
 </Project>

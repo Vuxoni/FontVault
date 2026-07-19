@@ -1,0 +1,128 @@
+name: Prepare release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version without v prefix (for example 1.2.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: prepare-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Build and create draft release
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate version
+        shell: pwsh
+        run: |
+          $version = "${{ inputs.version }}".Trim()
+          if ($version -notmatch '^\d+\.\d+\.\d+([-.][0-9A-Za-z.-]+)?$') {
+            throw "Version must look like 1.2.0 or 1.2.0-beta.1"
+          }
+          "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "TAG=v$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Ensure release does not already exist
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view $env:TAG --repo $env:GITHUB_REPOSITORY 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            throw "Release $env:TAG already exists. Delete it or use another version."
+          }
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore FontVault/FontVault.csproj -r win-x64
+
+      - name: Build
+        run: dotnet build FontVault/FontVault.csproj -c Release -p:Platform=x64 -r win-x64 --no-restore
+
+      - name: Publish self-contained app
+        run: >-
+          dotnet publish FontVault/FontVault.csproj
+          -c Release
+          -p:Platform=x64
+          -r win-x64
+          --self-contained true
+          --no-restore
+          -o artifacts/publish
+
+      - name: Verify release files
+        shell: pwsh
+        run: |
+          $required = @(
+            "artifacts/publish/FontVault.exe",
+            "artifacts/publish/FontVault.dll",
+            "artifacts/publish/Microsoft.WindowsAppRuntime.Bootstrap.dll"
+          )
+          foreach ($file in $required) {
+            if (-not (Test-Path $file)) {
+              throw "Required release file is missing: $file"
+            }
+          }
+
+      - name: Create ZIP and checksum
+        shell: pwsh
+        run: |
+          $zip = "artifacts/FontVault-$env:VERSION-win-x64.zip"
+          Compress-Archive -Path "artifacts/publish/*" -DestinationPath $zip -CompressionLevel Optimal
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $(Split-Path $zip -Leaf)" | Set-Content "artifacts/FontVault-$env:VERSION-win-x64.sha256"
+          "ZIP_PATH=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "SHA_PATH=artifacts/FontVault-$env:VERSION-win-x64.sha256" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FontVault-${{ env.VERSION }}-win-x64
+          path: |
+            ${{ env.ZIP_PATH }}
+            ${{ env.SHA_PATH }}
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Create draft GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create $env:TAG `
+            --repo $env:GITHUB_REPOSITORY `
+            --target $env:GITHUB_SHA `
+            --title "FontVault $env:VERSION" `
+            --generate-notes `
+            --draft `
+            $env:ZIP_PATH `
+            $env:SHA_PATH
+
+      - name: Add summary
+        shell: pwsh
+        run: |
+          @"
+          ## Draft release prepared
+          - Version: **$env:TAG**
+          - Package: `FontVault-$env:VERSION-win-x64.zip`
+          - Status: **Draft — not public**
+
+          Review the draft in GitHub Releases. Publish it only through the separate **Publish release** workflow.
+          "@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
