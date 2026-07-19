@@ -1,0 +1,39 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build output
+bin/
+obj/
+Debug/
+Release/
+x64/
+x86/
+ARM64/
+AppPackages/
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+
+# Generated files
+Generated Files/
+BundleArtifacts/
+PublishOutputs/
+
+# Certificates and signing
+*.pfx
+*.p12
+*.cer
+*.key
+
+# Logs
+*.log
+
+# Windows
+Thumbs.db
+Desktop.ini

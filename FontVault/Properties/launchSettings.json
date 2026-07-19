@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "FontVault (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "FontVault (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
