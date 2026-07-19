@@ -36,15 +36,29 @@ jobs:
           "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
           "TAG=v$version" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      - name: Ensure release does not already exist
+            - name: Ensure release does not already exist
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view $env:TAG --repo $env:GITHUB_REPOSITORY 2>$null
-          if ($LASTEXITCODE -eq 0) {
-            throw "Release $env:TAG already exists. Delete it or use another version."
+          $json = gh release list `
+            --repo $env:GITHUB_REPOSITORY `
+            --limit 100 `
+            --json tagName
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "Could not check existing GitHub Releases."
           }
+
+          $existing = $json |
+            ConvertFrom-Json |
+            Where-Object { $_.tagName -eq $env:TAG }
+
+          if ($existing) {
+            throw "Release $env:TAG already exists. Use another version."
+          }
+
+          Write-Host "Release $env:TAG does not exist. Continuing..."
 
       - name: Set up .NET 8
         uses: actions/setup-dotnet@v4
