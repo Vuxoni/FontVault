@@ -14,13 +14,15 @@ FontVault lets you temporarily load fonts into Windows without permamently insta
 - Automatic cleanup when FontVault closes
 - Duplicate font detection
 
-# Build With
+# Built With
 - C#
 - .NET 8
 - WinUI 3
 
-# Usage - Releases
-Download the latest version from `Releases`
+# Usage - Releases - Not yet available
+~~Download the latest version from `Releases`~~
+Downloadable file will be available after completing the development phase
+
 
 # Usage - Project
 Clone the repository:\
