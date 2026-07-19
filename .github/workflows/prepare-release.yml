@@ -36,7 +36,7 @@ jobs:
           "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
           "TAG=v$version" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-            - name: Ensure release does not already exist
+      - name: Ensure release does not already exist
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
